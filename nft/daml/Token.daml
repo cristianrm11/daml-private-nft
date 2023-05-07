@@ -25,7 +25,10 @@ template Token
                              -- For example if it's 2% and the token was sold at $100 then the newOwner has to pay $100 to the owner and $2 to the issuer
 
     where
-        signatory issuer, userAdmin
+        signatory issuer, userAdmin, owner
+
+    key (issuer, owner, description) : (Party, Party, Text)
+    maintainer key._2
 
     controller owner can
         Offer: ContractId Offer
