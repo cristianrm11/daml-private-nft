@@ -52,29 +52,29 @@ template TokenOffer
     where
         signatory issuer, userAdmin, owner
 
-        controller newOwner, userAdmin can
-            AcceptToken: (ContractId Token, ContractId Payable, ContractId Payable)
-                do
-                    fromtNewOwnerToOwner <- create Payable
-                        with
-                            from = newOwner
-                            to = owner
-                            amount = price
-                            currency
-                            reference = "Notional for `" <> description <> "`."
+        choice AcceptToken: (ContractId Token, ContractId Payable, ContractId Payable)
+            controller newOwner, userAdmin
+            do
+                fromtNewOwnerToOwner <- create Payable
+                    with
+                        from = newOwner
+                        to = owner
+                        amount = price
+                        currency
+                        reference = "Notional for `" <> description <> "`."
 
-                    royaltyPayment <- create Payable
-                        with
-                            from = newOwner
-                            to = issuer
-                            amount = price / royaltyRate
-                            currency
-                            reference = "Royalty for `" <> description <> "`."
+                royaltyPayment <- create Payable
+                    with
+                        from = newOwner
+                        to = issuer
+                        amount = price / royaltyRate
+                        currency
+                        reference = "Royalty for `" <> description <> "`."
 
 
-                    newToken = create Token
-                        with
-                            owner = newOwner
-                            lastPrice = price
-                            ..
-                    return (newToken, fromtNewOwnerToOwner, royaltyPayment)
+                newToken = create Token
+                    with
+                        owner = newOwner
+                        lastPrice = price
+                        ..
+                return (newToken, fromtNewOwnerToOwner, royaltyPayment)

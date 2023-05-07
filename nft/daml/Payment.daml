@@ -12,12 +12,12 @@ template Payable
         signatory from 
         observer to
 
-        controller from can
-            ClaimPaid: ContractId PaymentClaim
-                with
-                    transactionId: Text
-                do
-                    create PaymentClaim with ..
+        choice ClaimPaid: ContractId PaymentClaim
+            with
+                transactionId: Text
+            controller from
+            do
+                create PaymentClaim with ..
 
 template PaymentClaim
     with
@@ -30,12 +30,12 @@ template PaymentClaim
     where
         signatory from
 
-        controller to can
-            Receive: ContractId Receipt
-                do
-                    received <- getTime
-                    create Receipt
-                        with ..
+        choice Receive: ContractId Receipt
+            controller to
+            do
+                received <- getTime
+                create Receipt
+                    with ..
 
 template Receipt
     with
@@ -50,8 +50,8 @@ template Receipt
     where
         signatory to, from
 
-        controller from can
-            Dismiss: ()
-                do return ()
+        choice Dismiss: ()
+            controller from
+            do return ()
 
         

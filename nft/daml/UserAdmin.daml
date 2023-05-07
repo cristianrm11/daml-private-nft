@@ -11,13 +11,13 @@ template Issuer
     where
         signatory userAdmin
 
-        controller issuer can
-            nonconsuming MintToken: ContractId Token
-                with
-                    description: Text
-                    initialPrice: Decimal
-                    currency: Text
-                    royaltyRate: Decimal
+        nonconsuming choice MintToken: ContractId Token
+            with
+                description: Text
+                initialPrice: Decimal
+                currency: Text
+                royaltyRate: Decimal
+            controller issuer
                 do
                     issued <- getTime
                     create Token
@@ -25,9 +25,9 @@ template Issuer
                             lastPrice = initialPrice
                             owner = issuer
                             ..
-        controller userAdmin can
-            RevokeIssuer: ()
-                do return ()
+        choice RevokeIssuer: ()
+            controller userAdmin
+            do return ()
 
 template IssuerRequest
     with
@@ -38,13 +38,14 @@ template IssuerRequest
     where
         signatory issuer
 
-        controller userADmin can
-            GrantIssuerRights: ContractId Issuer
-                do
-                    create Issuer with ..
+        choice GrantIssuerRights: ContractId Issuer
+            controller userADmin
+            do
+                create Issuer with ..
             
-            RejectIssuerRequest: ()
-                do return ()
+        choice RejectIssuerRequest: ()
+            controller userAdmin
+            do return ()
 
 template  Owner
     with
@@ -54,38 +55,41 @@ template  Owner
     where
         signatory userAdmin
 
-        controller owner can
-            nonconsuming AcceptTokenAsNewOwner: (ContractId Token, ContractId Payable, ContractId Payable)
-                with
-                    offerId: ContractId TokenOffer
-                do
-                    execise offerId AcceptToken
+        
+        nonconsuming choice AcceptTokenAsNewOwner: (ContractId Token, ContractId Payable, ContractId Payable)
+            with
+                offerId: ContractId TokenOffer
+            controller owner
+            do
+                execise offerId AcceptToken
 
-            nonconsuming AcceptTokenByKey: (ContractId Token, ContractId Payable, ContractId Payable)
-                with
-                    issuer: Party
-                    currentOwner: Party
-                    description: Text
-                do
-                    exerciseByKey @TokenOffer (issuer, currentOwner, description) AcceptToken
+        nonconsuming choice AcceptTokenByKey: (ContractId Token, ContractId Payable, ContractId Payable)
+            with
+                issuer: Party
+                currentOwner: Party
+                description: Text
+            controller owner
+            do
+                exerciseByKey @TokenOffer (issuer, currentOwner, description) AcceptToken
 
-        controller userAdmin can
-            RevokeOwnerRights: ()
-                do return ()
+        choice RevokeOwnerRights: ()
+            controller userAdmin
+            do return ()
 
-template OwnewRequest
+template OwnerRequest
     with
         userAdmin: Party
         owner: Party
         reason: Text
     where
-        signatory 
+        signatory userADmin, owner
         
-        controller userAdmin can
-            GrantOwnerRights: ContractId Owner
-                do
-                    create Owner with ..
-            RejectOwnerRequest: ()
-                do return ()
+        choice GrantOwnerRights: ContractId Owner
+            controller userAdmin
+            do create Owner with ..
+
+        choice RejectOwnerRequest: ()
+            controller userAdmin
+            do return ()
         
         
