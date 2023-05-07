@@ -1,0 +1,55 @@
+module Token where
+
+{-
+Content creators (issuers) can create NFTs and offer them for purchase (Token and TokenOffer templates)
+Owners can sell their NFTs and have to pay royalties (Receipt, Payable, and PaymentClaim templates)
+Parties (issuers and owners) must be explicitly permitted to join the network (Issuer, IssuerRequest, Owner, and OwnerRequest templates)
+-}
+
+-- behavior
+-- datamodel
+-- rights/obligations
+
+template Token
+    with
+        issuer: Party
+        owner: Party -- person who gets to get a claim on the token
+        description: Text
+        userAdmin: Party -- make sure issuer and owner are legit
+        issued: Time
+        lastPrice: Decimal
+        currency: Text
+
+    where
+        signatory issuer, userAdmin
+
+    controller owner can
+        Offer: ContractId Offer
+            with
+                newOwner: Party
+                price: Decimal
+            do
+                create TokenOffer with ..
+
+template TokenOffer
+    with
+        issuer: Party
+        owner: Party -- person who gets to get a claim on the token
+        description: Text
+        userAdmin: Party -- make sure issuer and owner are legit
+        issued: Time
+        newOwner: Party
+        price: Decimal
+        lastPrice: Decimal
+        currency: Text
+    where
+        signatory issuer, userAdmin, owner
+
+        controller newOwner can
+            AcceptToken: ContractId Token
+                do
+                    create Token
+                        with
+                            owner = newOwner
+                            lastPrice = price
+                            ..
