@@ -21,6 +21,8 @@ template Token
         issued: Time
         lastPrice: Decimal
         currency: Text
+        royaltyRate: Decimal -- determines how much money should gets paid back to the issuer.
+                             -- For example if it's 2% and the token was sold at $100 then the newOwner has to pay $100 to the owner and $2 to the issuer
 
     where
         signatory issuer, userAdmin
@@ -48,7 +50,7 @@ template TokenOffer
         signatory issuer, userAdmin, owner
 
         controller newOwner can
-            AcceptToken: (ContractId Token, ContractId Payable)
+            AcceptToken: (ContractId Token, ContractId Payable, ContractId Payable)
                 do
                     fromtNewOwnerToOwner <- create Payable
                         with
@@ -58,9 +60,18 @@ template TokenOffer
                             currency
                             reference = "Notional for `" <> description <> "`."
 
+                    royaltyPayment <- create Payable
+                        with
+                            from = newOwner
+                            to = issuer
+                            amount = price / royaltyRate
+                            currency
+                            reference = "Royalty for `" <> description <> "`."
+
+
                     newToken = create Token
                         with
                             owner = newOwner
                             lastPrice = price
                             ..
-                    return (newToken, fromtNewOwnerToOwner)
+                    return (newToken, fromtNewOwnerToOwner, royaltyPayment)
